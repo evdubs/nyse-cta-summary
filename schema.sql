@@ -1,0 +1,14 @@
+CREATE TABLE nyse.cta_summary
+(
+    act_symbol text COLLATE pg_catalog."default" NOT NULL,
+    date date NOT NULL,
+    high numeric,
+    low numeric,
+    close numeric,
+    volume bigint,
+    CONSTRAINT cta_summary_pkey PRIMARY KEY (act_symbol, date),
+    CONSTRAINT cta_summary_act_symbol_pkey FOREIGN KEY (act_symbol)
+        REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+);
