@@ -2,6 +2,7 @@ CREATE TABLE nyse.cta_summary
 (
     act_symbol text COLLATE pg_catalog."default" NOT NULL,
     date date NOT NULL,
+    open numeric,
     high numeric,
     low numeric,
     close numeric,
