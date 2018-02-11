@@ -1,21 +1,22 @@
 #lang racket
 
 (require net/ftp)
-(require srfi/19) ;; Time Data Types and Procedures
+(require racket/cmdline)
+(require srfi/19) ; Time Data Types and Procedures
 
-(display (string-append "start date [" (date->string (current-date) "~1") "]: "))
-(flush-output)
-(define start-date
-  (let ([date-string-input (read-line)])
-    (if (equal? "" date-string-input) (current-date)
-        (string->date date-string-input "~Y-~m-~d"))))
+(define start-date (make-parameter (current-date)))
 
-(display (string-append "end date [" (date->string (current-date) "~1") "]: "))
-(flush-output)
-(define end-date
-  (let ([date-string-input (read-line)])
-    (if (equal? "" date-string-input) (current-date)
-        (string->date date-string-input "~Y-~m-~d"))))
+(define end-date (make-parameter (current-date)))
+
+(command-line
+ #:program "racket extract.rkt"
+ #:once-each
+ [("-e" "--end-date") end
+                      "Final date for file retrieval. Defaults to today"
+                      (end-date (string->date end "~Y-~m-~d"))]
+ [("-s" "--start-date") start
+                        "Earliest date for file retrieval. Defaults to today"
+                        (start-date (string->date start "~Y-~m-~d"))])
 
 (define nyxdata-ftp (ftp-establish-connection "ftp.nyxdata.com" 21 "anonymous" "anonymous"))
 (ftp-cd nyxdata-ftp "cts_summary_files")
@@ -24,6 +25,6 @@
                                                (displayln ((error-value->string-handler) e 1000)))])
                     (ftp-download-file nyxdata-ftp "/var/tmp/nyse/cta-summary"
                                        (string-append "CTA.Summary.EODSUM." (date->string (julian-day->date jd) "~Y~m~d") ".csv"))))
-            (range (date->julian-day start-date) (date->julian-day end-date)))
+          (range (date->julian-day (start-date)) (date->julian-day (end-date))))
 
 (ftp-close-connection nyxdata-ftp)

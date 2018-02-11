@@ -1,15 +1,9 @@
 #lang racket
 
 (require db)
+(require racket/cmdline)
 (require racket/struct)
 (require srfi/19) ; Time Data Types and Procedures
-
-(display (string-append "CTA.Summary.EODSUM file date [" (date->string (current-date) "~1") "]: "))
-(flush-output)
-(define file-date
-  (let ([date-string-input (read-line)])
-    (if (equal? "" date-string-input) (current-date)
-        (string->date date-string-input "~Y-~m-~d"))))
 
 (struct con-entry
   (message-category
@@ -49,29 +43,35 @@
    tick)
   #:transparent)
 
-(display (string-append "db user [user]: "))
-(flush-output)
-(define db-user
-  (let ([db-user-input (read-line)])
-    (if (equal? "" db-user-input) "user"
-        db-user-input)))
+(define file-date (make-parameter (current-date)))
 
-(display (string-append "db name [local]: "))
-(flush-output)
-(define db-name
-  (let ([db-name-input (read-line)])
-    (if (equal? "" db-name-input) "local"
-        db-name-input)))
+(define db-user (make-parameter "user"))
 
-(display (string-append "db pass []: "))
-(flush-output)
-(define db-pass (read-line))
+(define db-name (make-parameter "local"))
 
-(define dbc (postgresql-connect #:user db-user #:database db-name #:password db-pass))
+(define db-pass (make-parameter ""))
+
+(command-line
+ #:program "racket transform-load.rkt"
+ #:once-each
+ [("-d" "--file-date") date
+                       "NYSE CTA Summary File file date. Defaults to today"
+                       (file-date (string->date date "~Y-~m-~d"))]
+ [("-n" "--db-name") name
+                     "Database name. Defaults to 'local'"
+                     (db-name name)]
+ [("-p" "--db-pass") password
+                     "Database password"
+                     (db-pass password)]
+ [("-u" "--db-user") user
+                     "Database user name. Defaults to 'user'"
+                     (db-user user)])
+
+(define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
 (with-input-from-file
     (string-append "/var/tmp/nyse/cta-summary/CTA.Summary.EODSUM."
-                   (date->string file-date "~Y~m~d")
+                   (date->string (file-date) "~Y~m~d")
                    ".csv")
   (λ ()
     (let* ([lines (sequence->list (in-lines))]
@@ -90,7 +90,7 @@
                                               part-eod-entries)])
       (for-each (λ (entry)
                   (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
-                                                                              (date->string file-date "~1")))
+                                                                              (date->string (file-date) "~1")))
                                                (displayln (struct->list entry))
                                                (displayln ((error-value->string-handler) e 1000))
                                                (rollback-transaction dbc))])
@@ -122,7 +122,7 @@ insert into nyse.cta_summary (
 ) on conflict (act_symbol, date) do nothing;
 "
                                 (string-replace (con-entry-symbol entry) "/" ".")
-                                (date->string file-date "~1")
+                                (date->string (file-date) "~1")
                                 (string-replace (con-entry-high-price entry) "_" "")
                                 (string-replace (con-entry-low-price entry) "_" "")
                                 (string-replace (con-entry-last-price entry) "_" "")
@@ -130,7 +130,7 @@ insert into nyse.cta_summary (
                     (commit-transaction dbc))) con-eod-entries)
       (sequence-for-each (λ (entry)
                            (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
-                                                                                       (date->string file-date "~1")))
+                                                                                       (date->string (file-date) "~1")))
                                                         (displayln (struct->list entry))
                                                         (displayln ((error-value->string-handler) e 1000))
                                                         (rollback-transaction dbc))])
@@ -149,7 +149,7 @@ where
   date = $2::text::date;
 "
                                          (string-replace (part-entry-symbol entry) "/" ".")
-                                         (date->string file-date "~1")
+                                         (date->string (file-date) "~1")
                                          (string-replace (part-entry-open-price entry) "_" ""))
                              (commit-transaction dbc))) part-eod-entries-from-con))))
 
