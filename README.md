@@ -4,8 +4,8 @@ These Racket programs will download the NYSE CTA Summary EODSUM CSV files and in
 The intended usage is:
 
 ```bash
-$ Racket extract.rkt
-$ Racket transform-load.rkt
+$ racket extract.rkt
+$ racket transform-load.rkt
 ```
 
 The provided schema.sql file shows the expected schema within the target PostgreSQL instance. 
