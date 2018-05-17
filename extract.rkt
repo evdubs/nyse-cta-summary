@@ -6,7 +6,8 @@
 
 (define start-date (make-parameter (current-date)))
 
-(define end-date (make-parameter (current-date)))
+(define end-date (make-parameter (time-utc->date (add-duration (date->time-utc (current-date))
+                                                               (make-time time-duration 0 (* 60 60 24))))))
 
 (command-line
  #:program "racket extract.rkt"
@@ -15,7 +16,7 @@
                       "Final date for file retrieval. Defaults to today"
                       (end-date (string->date end "~Y-~m-~d"))]
  [("-s" "--start-date") start
-                        "Earliest date for file retrieval. Defaults to today"
+                        "Earliest date for file retrieval. Defaults to tomorrow"
                         (start-date (string->date start "~Y-~m-~d"))])
 
 (define nyxdata-ftp (ftp-establish-connection "ftp.nyxdata.com" 21 "anonymous" "anonymous"))
