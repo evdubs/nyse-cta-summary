@@ -69,6 +69,14 @@
 
 (define dbc (postgresql-connect #:user (db-user) #:database (db-name) #:password (db-pass)))
 
+(define insert-counter 0)
+(define insert-success-counter 0)
+(define insert-failure-counter 0)
+
+(define update-counter 0)
+(define update-success-counter 0)
+(define update-failure-counter 0)
+
 (with-input-from-file
     (string-append "/var/tmp/nyse/cta-summary/CTA.Summary.EODSUM."
                    (date->string (file-date) "~Y~m~d")
@@ -93,7 +101,9 @@
                                                                               (date->string (file-date) "~1")))
                                                (displayln (struct->list entry))
                                                (displayln ((error-value->string-handler) e 1000))
-                                               (rollback-transaction dbc))])
+                                               (rollback-transaction dbc)
+                                               (set! insert-failure-counter (add1 insert-failure-counter)))])
+                    (set! insert-counter (add1 insert-counter))
                     (start-transaction dbc)
                     (query-exec dbc "
 insert into nyse.cta_summary (
@@ -127,13 +137,16 @@ insert into nyse.cta_summary (
                                 (string-replace (con-entry-low-price entry) "_" "")
                                 (string-replace (con-entry-last-price entry) "_" "")
                                 (string-replace (con-entry-total-volume entry) "_" ""))
-                    (commit-transaction dbc))) con-eod-entries)
+                    (commit-transaction dbc)
+                    (set! insert-success-counter (add1 insert-success-counter)))) con-eod-entries)
       (sequence-for-each (λ (entry)
                            (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
                                                                                        (date->string (file-date) "~1")))
                                                         (displayln (struct->list entry))
                                                         (displayln ((error-value->string-handler) e 1000))
-                                                        (rollback-transaction dbc))])
+                                                        (rollback-transaction dbc)
+                                                        (set! update-failure-counter (add1 update-failure-counter)))])
+                             (set! update-counter (add1 update-counter))
                              (start-transaction dbc)
                              (query-exec dbc "
 update
@@ -151,6 +164,15 @@ where
                                          (string-replace (part-entry-symbol entry) "/" ".")
                                          (date->string (file-date) "~1")
                                          (string-replace (part-entry-open-price entry) "_" ""))
-                             (commit-transaction dbc))) part-eod-entries-from-con))))
+                             (commit-transaction dbc)
+                             (set! update-success-counter (add1 update-success-counter)))) part-eod-entries-from-con))))
 
 (disconnect dbc)
+
+(displayln (string-append "Attempted to insert " (number->string insert-counter) " rows. "
+                          (number->string insert-success-counter) " were successful. "
+                          (number->string insert-failure-counter) " failed."))
+
+(displayln (string-append "Attempted to update " (number->string update-counter) " rows. "
+                          (number->string update-success-counter) " were successful. "
+                          (number->string update-failure-counter) " failed."))
