@@ -1,9 +1,12 @@
-#lang racket
+#lang racket/base
 
-(require db)
-(require racket/cmdline)
-(require racket/struct)
-(require srfi/19) ; Time Data Types and Procedures
+(require db
+         racket/cmdline
+         racket/list
+         racket/sequence
+         racket/string
+         racket/struct
+         srfi/19) ; Time Data Types and Procedures
 
 (struct con-entry
   (message-category

@@ -1,8 +1,9 @@
-#lang racket
+#lang racket/base
 
-(require net/ftp)
-(require racket/cmdline)
-(require srfi/19) ; Time Data Types and Procedures
+(require net/ftp
+         racket/cmdline
+         racket/list
+         srfi/19) ; Time Data Types and Procedures
 
 (define start-date (make-parameter (current-date)))
 
