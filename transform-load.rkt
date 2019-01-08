@@ -88,7 +88,13 @@
     (let* ([lines (sequence->list (in-lines))]
            [con-eod-lines (filter (λ (line) (and (string-contains? line "Con_EOD")
                                                  (string-contains? line "16:15"))) lines)]
-           [con-eod-entries (map (λ (line) (apply con-entry (regexp-split #rx"," line))) con-eod-lines)]
+           [con-eod-entries (map (λ (line) (let ([split-line (regexp-split #rx"," line)])
+                                             ; If there's a value in the short-sale column, the CSV actually
+                                             ; follows it with a comma. This gives us an extra column. So, we
+                                             ; just drop it here.
+                                             (if (= 18 (length split-line))
+                                                 (apply con-entry (take split-line 17))
+                                                 (apply con-entry split-line)))) con-eod-lines)]
            [con-eod-hash (apply hash (flatten (map (λ (entry) (list (con-entry-symbol entry)
                                                                     (hash (con-entry-part-identifier entry) entry)))
                                                    con-eod-entries)))]
