@@ -14,10 +14,10 @@
  #:program "racket extract.rkt"
  #:once-each
  [("-e" "--end-date") end
-                      "Final date for file retrieval. Defaults to today"
+                      "Final date for file retrieval. Defaults to tomorrow"
                       (end-date (string->date end "~Y-~m-~d"))]
  [("-s" "--start-date") start
-                        "Earliest date for file retrieval. Defaults to tomorrow"
+                        "Earliest date for file retrieval. Defaults to today"
                         (start-date (string->date start "~Y-~m-~d"))])
 
 (define nyxdata-ftp (ftp-establish-connection "ftp.nyxdata.com" 21 "anonymous" "anonymous"))
