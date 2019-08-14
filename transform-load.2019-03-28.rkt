@@ -36,6 +36,8 @@
 
 (define db-pass (make-parameter ""))
 
+(define target-time (make-parameter "16:15"))
+
 (command-line
  #:program "racket transform-load.rkt"
  #:once-each
@@ -48,6 +50,9 @@
  [("-p" "--db-pass") password
                      "Database password"
                      (db-pass password)]
+ [("-t" "--target-time") time
+                         "Target Time. Used to extract data based on the TransTime field. Defaults to 16:15"
+                         (target-time time)]
  [("-u" "--db-user") user
                      "Database user name. Defaults to 'user'"
                      (db-user user)])
@@ -69,14 +74,14 @@
   (λ ()
     (let* ([lines (sequence->list (in-lines))]
            [con-eod-lines (filter (λ (line) (and (string-contains? line "ConsEOD")
-                                                 (string-contains? line "16:15"))) lines)]
+                                                 (string-contains? line (target-time)))) lines)]
            [con-eod-entries (map (λ (line) (let ([split-line (regexp-split #rx"," line)])
                                              (apply row-entry split-line))) con-eod-lines)]
            [con-eod-hash (apply hash (flatten (map (λ (entry) (list (row-entry-symbol entry)
                                                                     (hash (row-entry-part-identifier entry) entry)))
                                                    con-eod-entries)))]
            [part-eod-lines (filter (λ (line) (and (string-contains? line "PartEOD")
-                                                  (string-contains? line "16:15"))) lines)]
+                                                  (string-contains? line (target-time)))) lines)]
            [part-eod-entries (map (λ (line) (apply row-entry (regexp-split #rx"," line))) part-eod-lines)]
            [part-eod-entries-from-con (filter (λ (entry) (and (hash-has-key? con-eod-hash (row-entry-symbol entry))
                                                               (hash-has-key? (hash-ref con-eod-hash (row-entry-symbol entry))
