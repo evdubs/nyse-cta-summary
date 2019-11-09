@@ -1,12 +1,12 @@
 #lang racket/base
 
 (require db
+         gregor
          racket/cmdline
          racket/list
          racket/sequence
          racket/string
-         racket/struct
-         srfi/19) ; Time Data Types and Procedures
+         racket/struct)
 
 (struct row-entry
   (message-category-type
@@ -28,7 +28,7 @@
    tick)
   #:transparent)
 
-(define file-date (make-parameter (current-date)))
+(define file-date (make-parameter (today)))
 
 (define db-user (make-parameter "user"))
 
@@ -39,11 +39,11 @@
 (define target-time (make-parameter "16:15"))
 
 (command-line
- #:program "racket transform-load.rkt"
+ #:program "racket transform-load.2019-03-28.rkt"
  #:once-each
  [("-d" "--file-date") date
                        "NYSE CTA Summary File file date. Defaults to today"
-                       (file-date (string->date date "~Y-~m-~d"))]
+                       (file-date (iso8601->date date))]
  [("-n" "--db-name") name
                      "Database name. Defaults to 'local'"
                      (db-name name)]
@@ -69,7 +69,7 @@
 
 (with-input-from-file
     (string-append "/var/tmp/nyse/cta-summary/CTA.Summary.EODSUM."
-                   (date->string (file-date) "~Y~m~d")
+                   (~t (file-date) "yyyyMMdd")
                    ".csv")
   (λ ()
     (let* ([lines (sequence->list (in-lines))]
@@ -89,7 +89,7 @@
                                               part-eod-entries)])
       (for-each (λ (entry)
                   (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
-                                                                              (date->string (file-date) "~1")))
+                                                                              (~t (file-date) "yyyy-MM-dd")))
                                                (displayln (struct->list entry))
                                                (displayln ((error-value->string-handler) e 1000))
                                                (rollback-transaction dbc)
@@ -123,7 +123,7 @@ insert into nyse.cta_summary (
 ) on conflict (act_symbol, date) do nothing;
 "
                                 (string-replace (string-trim (row-entry-symbol entry)) "/" ".")
-                                (date->string (file-date) "~1")
+                                (~t (file-date) "yyyy-MM-dd")
                                 (string-replace (row-entry-high-price entry) "_" "")
                                 (string-replace (row-entry-low-price entry) "_" "")
                                 (string-replace (row-entry-last-close-price entry) "_" "")
@@ -132,7 +132,7 @@ insert into nyse.cta_summary (
                     (set! insert-success-counter (add1 insert-success-counter)))) con-eod-entries)
       (sequence-for-each (λ (entry)
                            (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
-                                                                                       (date->string (file-date) "~1")))
+                                                                                       (~t (file-date) "yyyy-MM-dd")))
                                                         (displayln (struct->list entry))
                                                         (displayln ((error-value->string-handler) e 1000))
                                                         (rollback-transaction dbc)
@@ -153,7 +153,7 @@ where
   date = $2::text::date;
 "
                                          (string-replace (string-trim (row-entry-symbol entry)) "/" ".")
-                                         (date->string (file-date) "~1")
+                                         (~t (file-date) "yyyy-MM-dd")
                                          (string-replace (row-entry-open-price entry) "_" ""))
                              (commit-transaction dbc)
                              (set! update-success-counter (add1 update-success-counter)))) part-eod-entries-from-con))))
