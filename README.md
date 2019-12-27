@@ -12,6 +12,14 @@ The provided schema.sql file shows the expected schema within the target Postgre
 This process assumes you can write to a /var/tmp/nyse/cta-summary folder. This process also assumes you have loaded your database with 
 NASDAQ symbol file information. This data is provided by the [nasdaq-symbols](https://github.com/evdubs/nasdaq-symbols) project.
 
+### Dependencies
+
+It is recommended that you start with the standard Racket distribution. With that, you will need to install the following packages:
+
+```bash
+$ raco pkg install --skip-installed gregor
+```
+
 ## Format update (2019-03-28)
 
 On 2019-03-28, the CTA Summary EODSUM CSV format changed. The new transform-load script to run is called `transform-load.2019-03-28.rkt`. 
