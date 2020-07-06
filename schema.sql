@@ -1,3 +1,5 @@
+CREATE SCHEMA nyse;
+
 CREATE TABLE nyse.cta_summary
 (
     act_symbol text NOT NULL,
