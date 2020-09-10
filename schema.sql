@@ -9,7 +9,7 @@ CREATE TABLE nyse.cta_summary
     low numeric,
     close numeric,
     volume bigint,
-    CONSTRAINT cta_summary_pkey PRIMARY KEY (act_symbol, date),
+    CONSTRAINT cta_summary_pkey PRIMARY KEY (date, act_symbol),
     CONSTRAINT cta_summary_act_symbol_pkey FOREIGN KEY (act_symbol)
         REFERENCES nasdaq.symbol (act_symbol) MATCH SIMPLE
         ON UPDATE NO ACTION
