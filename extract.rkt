@@ -24,7 +24,7 @@
 (ftp-cd nyxdata-ftp "cts_summary_files")
 
 (for-each (λ (i) (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to retrieve CTA file for " (~t (+days (start-date) i) "yyyy-MM-dd")))
-                                               (displayln ((error-value->string-handler) e 1000)))])
+                                               (displayln e))])
                     (ftp-download-file nyxdata-ftp "/var/tmp/nyse/cta-summary"
                                        (string-append "CTA.Summary.EODSUM." (~t (+days (start-date) i) "yyyyMMdd") ".csv"))))
           (range 0 (period-ref (period-between (start-date) (end-date) '(days)) 'days)))

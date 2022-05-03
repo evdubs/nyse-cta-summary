@@ -109,7 +109,7 @@
                   (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
                                                                               (date->string (file-date) "~1")))
                                                (displayln (struct->list entry))
-                                               (displayln ((error-value->string-handler) e 1000))
+                                               (displayln e)
                                                (rollback-transaction dbc)
                                                (set! insert-failure-counter (add1 insert-failure-counter)))])
                     (set! insert-counter (add1 insert-counter))
@@ -152,7 +152,7 @@ insert into nyse.cta_summary (
                            (with-handlers ([exn:fail? (λ (e) (displayln (string-append "Failed to process the following entry for date "
                                                                                        (date->string (file-date) "~1")))
                                                         (displayln (struct->list entry))
-                                                        (displayln ((error-value->string-handler) e 1000))
+                                                        (displayln e)
                                                         (rollback-transaction dbc)
                                                         (set! update-failure-counter (add1 update-failure-counter)))])
                              (set! update-counter (add1 update-counter))
