@@ -36,7 +36,7 @@ racket transform-load.2019-03-28.rkt [ <option> ... ]
 ```
 
 The provided `schema.sql` file shows the expected schema within the target PostgreSQL instance. 
-This process assumes you can write to a `/var/tmp/nyse/cta-summary` folder. This process also assumes you have loaded your database with 
+This process assumes you can write to a `/var/local/nyse/cta-summary` folder. This process also assumes you have loaded your database with 
 NASDAQ symbol file information. This data is provided by the [nasdaq-symbols](https://github.com/evdubs/nasdaq-symbols) project.
 
 ### Dependencies

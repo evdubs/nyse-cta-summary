@@ -81,7 +81,7 @@
 (define update-failure-counter 0)
 
 (with-input-from-file
-    (string-append "/var/tmp/nyse/cta-summary/CTA.Summary.EODSUM."
+    (string-append "/var/local/nyse/cta-summary/CTA.Summary.EODSUM."
                    (date->string (file-date) "~Y~m~d")
                    ".csv")
   (λ ()
